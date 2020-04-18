@@ -155,20 +155,49 @@ class SecondPaper:
         colors= plt.cm.gray(change_color(self.nn.flatten()/self.final_stable_nC().flatten()))
         ax.bar3d(self.ll.flatten(), self.nn.flatten(), np.zeros(self.final_stable_nC().size),
                  0.02*np.ones(self.final_stable_nC().size), 0.02*np.ones(self.final_stable_nC().size),
-                 self.final_stable_nC().flatten(), shade=True, color=colors, linewidth=0, edgecolor='w')
+                 self.final_stable_nC().flatten(), shade=True, color=colors, linewidth=0)
         ax.set_xlabel('$\lambda$', fontsize=20)
         ax.set_ylabel('$n$', fontsize=20)
         ax.set_zlabel('$k$', fontsize=20)
         ax.tick_params(axis='both', which='major', labelsize=18)
         ax.tick_params(axis='both', which='minor', labelsize=14)
-        ax.plot_surface(self.ll, self.nn, self.surface_data())
         ax.set_ylim3d(0, 50)
         ax.set_zlim3d(1, 50)
         ax.view_init(15, -50)
         plt.savefig('bar_3D.png', bbox_inches='tight', pad_inches=0)
         plt.show()
 
-    def dataplot(self): # best for case of n=50
+    def welfare_plot(self, n):
+        def index_list(n_C):
+            start = 0
+            i = len(n_C) - 1
+            index_list = []
+            while i >= 0:
+                if start != n_C[i]:
+                    start = n_C[i]
+                    index_list.append(i)
+                    continue
+                i -= 1
+            return index_list
+        n_C = self.final_stable_nC()[:, n - self.n_min]
+        index_list = index_list(n_C)
+        lambd = self.lamb.flatten()
+        Q = self.market_volume()[:, n - self.n_min]
+        fig = plt.figure(figsize=(19.20, 12.80))
+        ax = fig.add_subplot(111)
+        plt.rcParams['font.family'] = 'Times New Roman'
+        ax.set_xlabel('$\lambda$', fontsize=20)
+        ax.set_ylabel('Total Output $Q$', fontsize=20)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        ax.tick_params(axis='both', which='minor', labelsize=14)
+        plt.style.use('seaborn-whitegrid')
+        plt.plot(lambd, Q, "o-k")
+        for i in index_list:
+            ax.text(lambd[i] + 0.01, Q[i], s='$k$ = {}'.format(int(n_C[i])), fontsize=20)
+        plt.savefig('Welfare.png', bbox_inches='tight', pad_inches=0)
+        plt.show()
+
+    def plot_2D(self): # best for case of n=50
         plt.figure()
         plt.scatter(self.ll, self.nn, s=self.n_C()/(int(self.n_max/50)), cmap='viridis', alpha=0.5, c='k')
         plt.title("Number of Cartel Members")
@@ -186,7 +215,4 @@ wp2 = SecondPaper(n_max=50, n_min=2, lamb_max=1, lamb_min=0, number_of_lamb=50)
 
 wp2.bar3D_plot()
 wp2.suface_plot()
-n_C = wp2.final_stable_nC()
-
-
-
+wp2.welfare_plot(10)
