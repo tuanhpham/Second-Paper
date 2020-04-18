@@ -186,10 +186,11 @@ class SecondPaper:
         fig = plt.figure(figsize=(19.20, 12.80))
         ax = fig.add_subplot(111)
         plt.rcParams['font.family'] = 'Times New Roman'
-        ax.set_xlabel('$\lambda$', fontsize=20)
+        ax.set_xlabel('Enforceability Level $\lambda$', fontsize=20)
         ax.set_ylabel('Total Output $Q$', fontsize=20)
         ax.tick_params(axis='both', which='major', labelsize=18)
         ax.tick_params(axis='both', which='minor', labelsize=14)
+        ax.set_xlim(-0.05, 1.05)
         plt.style.use('seaborn-whitegrid')
         plt.plot(lambd, Q, "o-k")
         for i in index_list:
