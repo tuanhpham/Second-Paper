@@ -125,62 +125,21 @@ class SecondPaper:
                     surface_data[i, j] = middle_value[i, j]
         return surface_data
 
-    def suface_plot(self):
-        fig = plt.figure(figsize=(19.20, 12.80))
-        ax = fig.gca(projection='3d')
-        plt.rcParams['font.family'] = 'Times New Roman'
-        ax.set_xlabel('$\lambda$', fontsize=20)
-        ax.set_ylabel('$n$', fontsize=20)
-        ax.set_zlabel('$k$', fontsize=20)
-        ax.tick_params(axis='both', which='major', labelsize=18)
-        ax.tick_params(axis='both', which='minor', labelsize=14)
-        ax.plot_surface(self.ll, self.nn, self.surface_data())
-        ax.set_ylim3d(0, 50)
-        ax.set_zlim3d(1, 50)
-        ax.view_init(15, -50)
-        plt.savefig('Surface_3D.png', bbox_inches='tight', pad_inches=0)
-        plt.show()
-
-    def bar3D_plot(self):
-        def change_color(x):
-            for i in range(len(x)):
-                if x[i] != 1:
-                    x[i] = 1
-                else:
-                    x[i] = 0.7
-            return x
-        fig = plt.figure(figsize=(19.20, 12.80))
-        ax = fig.add_subplot(111, projection='3d')
-        plt.rcParams['font.family'] = 'Times New Roman'
-        colors= plt.cm.gray(change_color(self.nn.flatten()/self.final_stable_nC().flatten()))
-        ax.bar3d(self.ll.flatten(), self.nn.flatten(), np.zeros(self.final_stable_nC().size),
-                 0.02*np.ones(self.final_stable_nC().size), 0.02*np.ones(self.final_stable_nC().size),
-                 self.final_stable_nC().flatten(), shade=True, color=colors, linewidth=0)
-        ax.set_xlabel('$\lambda$', fontsize=20)
-        ax.set_ylabel('$n$', fontsize=20)
-        ax.set_zlabel('$k$', fontsize=20)
-        ax.tick_params(axis='both', which='major', labelsize=18)
-        ax.tick_params(axis='both', which='minor', labelsize=14)
-        ax.set_ylim3d(0, 50)
-        ax.set_zlim3d(1, 50)
-        ax.view_init(15, -50)
-        plt.savefig('bar_3D.png', bbox_inches='tight', pad_inches=0)
-        plt.show()
+      def index_list(self, n_C):
+        start = 0
+        i = len(n_C) - 1
+        index_list = []
+        while i >= 0:
+            if start != n_C[i]:
+                start = n_C[i]
+                index_list.append(i)
+                continue
+            i -= 1
+        return index_list
 
     def welfare_plot(self, n):
-        def index_list(n_C):
-            start = 0
-            i = len(n_C) - 1
-            index_list = []
-            while i >= 0:
-                if start != n_C[i]:
-                    start = n_C[i]
-                    index_list.append(i)
-                    continue
-                i -= 1
-            return index_list
         n_C = self.final_stable_nC()[:, n - self.n_min]
-        index_list = index_list(n_C)
+        index_list = self.index_list(n_C)
         lambd = self.lamb.flatten()
         Q = self.market_volume()[:, n - self.n_min]
         fig = plt.figure(figsize=(19.20, 12.80))
@@ -196,6 +155,50 @@ class SecondPaper:
         for i in index_list:
             ax.text(lambd[i] + 0.01, Q[i], s='$k$ = {}'.format(int(n_C[i])), fontsize=20)
         plt.savefig('Welfare.png', bbox_inches='tight', pad_inches=0)
+        plt.show()
+
+
+    def welfare_animation(self, n):
+        n_C = self.final_stable_nC()[:, n - self.n_min]
+        index_list = self.index_list(n_C)
+        lambd = self.lamb.flatten()
+        Q = self.market_volume()[:, n - self.n_min]
+        fig = plt.figure(figsize=(19.20, 12.80))
+        ax = fig.add_subplot(111)
+        plt.style.use('seaborn-whitegrid')
+        def update(ii):
+            i = len(lambd) - ii -1
+            j = len(lambd)
+            # title = 'Q = %.2f' % (Q[i]) + ', $\lambda = %.2f$' % (lambd[i]) + ', $n$ = 10'
+            xlabel = 'Enforceability Level $\lambda$'
+            ylabel = "Total Quantity $Q$"
+
+            animlist = plt.cla()
+            animlist = plt.axis([-0.02, np.max(lambd)+0.02, np.min(Q) - 1, np.max(Q) + 1])
+            # animlist = plt.plot([], [])
+            animlist = plt.plot(lambd[i:j], Q[i:j], 'ko-')
+            ax.set_xlabel(xlabel, fontsize=20)
+            ax.set_ylabel(ylabel, fontsize=20)
+            # ax.set_title(title, fontsize = 20)
+            ax.set_title('Q = %.2f' % (Q[i]) + ', $n = 10$', fontsize=30)
+            ax.tick_params(axis='both', which='major', labelsize=18)
+            ax.tick_params(axis='both', which='minor', labelsize=14)
+            for k in reversed(index_list):
+                if k >=i:
+                    text = '$k$ = %d' % (n_C[k])
+                    ax.text(lambd[k] + 0.01, Q[k], s='$k$ = {}'.format(int(n_C[k])), fontsize=20)
+                    ax.text(lambd[k] + 0.01, Q[k] - 0.5, s='$\lambda$ = {:.2f}'.format(lambd[k]), fontsize=20)
+                    ax.text(lambd[k] + 0.01, Q[k] - 1, s='$Q$ = {:.2f}'.format(Q[k]), fontsize=20)
+            # ax.text(lambd[i], np.max(Q) + 0.5, s='Q = %.2f' % (Q[i]), fontsize=30)
+            # ax.text(np.max(lambd) - 0.3, (np.max(Q) + np.min(Q)) / 2, s='Q = %.2f' % (Q[i]), fontsize=40)
+
+            return animlist, ax
+
+        anim = FuncAnimation(fig, update, frames=np.arange(0, 21), interval=1000)
+        Writer = animation.writers['ffmpeg']
+        writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
+        anim.save('wp2.mp4', writer=writer)
+        anim.save('wp2.gif', dpi=100, writer='imagemagick')
         plt.show()
 
     def plot_2D(self): # best for case of n=50
