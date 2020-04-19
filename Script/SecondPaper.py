@@ -125,7 +125,7 @@ class SecondPaper:
                     surface_data[i, j] = middle_value[i, j]
         return surface_data
 
-      def index_list(self, n_C):
+    def index_list(self, n_C):
         start = 0
         i = len(n_C) - 1
         index_list = []
@@ -136,6 +136,49 @@ class SecondPaper:
                 continue
             i -= 1
         return index_list
+
+    def bar3D_plot(self):
+        def change_color(x):
+            for i in range(len(x)):
+                if x[i] != 1:
+                    x[i] = 1
+                else:
+                    x[i] = 0.7
+            return x
+        fig = plt.figure(figsize=(19.20, 12.80))
+        ax = fig.add_subplot(111, projection='3d')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        colors= plt.cm.gray(change_color(self.nn.flatten()/self.final_stable_nC().flatten()))
+        ax.bar3d(self.ll.flatten(), self.nn.flatten(), np.zeros(self.final_stable_nC().size),
+                 0.02*np.ones(self.final_stable_nC().size), 0.02*np.ones(self.final_stable_nC().size),
+                 self.final_stable_nC().flatten(), shade=True, color=colors, linewidth=0, edgecolor='w')
+        ax.set_xlabel('$\lambda$', fontsize=20)
+        ax.set_ylabel('$n$', fontsize=20)
+        ax.set_zlabel('$k$', fontsize=20)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        ax.tick_params(axis='both', which='minor', labelsize=14)
+        ax.set_ylim3d(0, 50)
+        ax.set_zlim3d(1, 50)
+        ax.view_init(15, -50)
+        plt.savefig('bar_3D.png', bbox_inches='tight', pad_inches=0)
+        plt.show()
+
+    def suface_plot(self):
+        fig = plt.figure(figsize=(19.20, 12.80))
+        ax = fig.gca(projection='3d')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        ax.set_xlabel('$\lambda$', fontsize=20)
+        ax.set_ylabel('$n$', fontsize=20)
+        ax.set_zlabel('$k$', fontsize=20)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        ax.tick_params(axis='both', which='minor', labelsize=14)
+        ax.plot_surface(self.ll, self.nn, self.surface_data())
+        ax.set_ylim3d(0, 50)
+        ax.set_zlim3d(1, 50)
+        ax.view_init(15, -50)
+        plt.savefig('Surface_3D.png', bbox_inches='tight', pad_inches=0)
+        plt.show()
+
 
     def welfare_plot(self, n):
         n_C = self.final_stable_nC()[:, n - self.n_min]
@@ -193,7 +236,6 @@ class SecondPaper:
             # ax.text(np.max(lambd) - 0.3, (np.max(Q) + np.min(Q)) / 2, s='Q = %.2f' % (Q[i]), fontsize=40)
 
             return animlist, ax
-
         anim = FuncAnimation(fig, update, frames=np.arange(0, 21), interval=1000)
         Writer = animation.writers['ffmpeg']
         writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
